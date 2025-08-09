@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Wind Tunnel Calculator - Multi Step</title>
+<title>Wind Tunnel Calculator - Advanced</title>
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <style>
   body {
@@ -87,6 +87,25 @@
       margin: 5px 0;
     }
   }
+  .download-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .download-buttons button {
+    flex: 1 1 48%;
+    background: #28a745;
+  }
+  .download-buttons button:hover {
+    background: #1e7e34;
+  }
+  .info-text {
+    font-size: 0.9rem;
+    color: #555;
+    margin-top: 10px;
+    text-align: center;
+  }
 </style>
 </head>
 <body>
@@ -141,7 +160,7 @@
     
     <nav>
       <button onclick="goToStep(1)">← Back</button>
-      <button onclick="calculateResults()">Calculate →</button>
+      <button onclick="goToStep(3)">Next →</button>
     </nav>
   </section>
 
@@ -149,16 +168,27 @@
   <section id="step3" class="hidden">
     <h2>Step 3: Results Summary</h2>
     <div id="summary"></div>
+
+    <div class="download-buttons">
+      <button onclick="downloadCSV()">Download Summary CSV</button>
+      <button onclick="downloadPlotPNG('shapePlot')">Download Shape Plot PNG</button>
+      <button onclick="downloadPlotPNG('velocityPlot')">Download Velocity Plot PNG</button>
+      <button onclick="downloadPlotPNG('pressurePlot')">Download Pressure Plot PNG</button>
+      <button onclick="downloadPlotPNG('rePlot')">Download Reynolds Plot PNG</button>
+      <button onclick="downloadPlotPNG('machPlot')">Download Mach Plot PNG</button>
+    </div>
+
     <div id="plots"></div>
     <nav>
       <button onclick="goToStep(2)">← Back</button>
       <button onclick="goToStep(1)">Start Over</button>
     </nav>
+
+    <p class="info-text">* Reynolds Number plot shows laminar zone (<2300) shaded in light blue, turbulent zone (≥2300) shaded in light orange.</p>
   </section>
 </div>
 
 <script>
-// Helper: show only one step section
 function goToStep(step) {
   for (let i=1; i<=3; i++) {
     document.getElementById(`step${i}`).classList.add('hidden');
@@ -166,16 +196,16 @@ function goToStep(step) {
   document.getElementById(`step${step}`).classList.remove('hidden');
   if(step === 3){
     window.scrollTo({top:0, behavior:'smooth'});
+    calculateResults();
   }
 }
 
-// Main calculation ported from your MATLAB code:
+// Main calculation ported from MATLAB
 function calculateResults() {
-  // Get inputs
   const a_test = parseFloat(document.getElementById("a_test").value);
   const L_test = parseFloat(document.getElementById("L_test").value);
-  const D_fan = parseFloat(document.getElementById("D_fan_in").value) * 0.0254; // inches to meters
-  const Q = parseFloat(document.getElementById("Q_m3h").value) / 3600; // m3/h to m3/s
+  const D_fan = parseFloat(document.getElementById("D_fan_in").value) * 0.0254;
+  const Q = parseFloat(document.getElementById("Q_m3h").value) / 3600;
   const rho = parseFloat(document.getElementById("rho").value);
   const mu = parseFloat(document.getElementById("mu").value);
   const P_atm = parseFloat(document.getElementById("P_atm").value);
@@ -185,7 +215,7 @@ function calculateResults() {
   const diffuser_angle_deg = parseFloat(document.getElementById("diffuser_angle").value);
   const include_diffuser = document.getElementById("include_diffuser").value === "true";
 
-  // Geometry calculations
+  // Geometry
   const A_test = a_test ** 2;
   const A_fan = Math.PI * (D_fan / 2) ** 2;
   const a_inlet = a_test * Math.sqrt(CR);
@@ -194,8 +224,9 @@ function calculateResults() {
   const L_contraction = 0.6 * Dh_inlet;
 
   let L_diffuser = 0;
+  let diffuser_angle_rad = 0;
   if(include_diffuser){
-    const diffuser_angle_rad = diffuser_angle_deg * Math.PI / 180;
+    diffuser_angle_rad = diffuser_angle_deg * Math.PI / 180;
     const R_exit = Math.sqrt(A_fan / Math.PI);
     const R_test = a_test / 2;
     L_diffuser = (R_exit - R_test) / Math.tan(diffuser_angle_rad);
@@ -240,6 +271,9 @@ function calculateResults() {
     half_height.push(hh);
   }
 
+  // Section boundaries
+  const x_key = [0, L_contraction, L_contraction + L_test, L_total];
+
   // Summary
   const exhaust_velocity = V[V.length-1];
   const exhaust_pressure = P[P.length-1];
@@ -260,7 +294,18 @@ function calculateResults() {
 
   document.getElementById("summary").innerHTML = summaryHTML;
 
-  // Plot 1: Wind Tunnel Shape (Half height)
+  // Create vertical lines for sections
+  const sectionLines = x_key.map(xval => ({
+    type: 'line',
+    x0: xval,
+    y0: 0,
+    x1: xval,
+    y1: 1,
+    yref: 'paper',
+    line: {color: 'grey', width: 1, dash: 'dot'}
+  }));
+
+  // Wind Tunnel Shape Plot
   const fig1 = {
     x: x,
     y: half_height,
@@ -270,29 +315,110 @@ function calculateResults() {
     line: {color: 'black'}
   };
 
-  // Plot 2: Velocity (m/s and km/h)
+  // Velocity Plot (m/s and km/h)
   const fig2 = [
     {x: x, y: V, type: 'scatter', mode: 'lines', name: 'Velocity (m/s)', line: {color: 'blue'}},
     {x: x, y: V.map(v => v*3.6), type: 'scatter', mode: 'lines', name: 'Velocity (km/h)', line: {dash:'dot', color: 'blue'}}
   ];
 
-  // Plot 3: Pressure (Pa and atm)
+  // Pressure Plot (Pa and atm)
   const fig3 = [
     {x: x, y: P, type: 'scatter', mode: 'lines', name: 'Pressure (Pa)', line: {color: 'green'}},
     {x: x, y: P_atm_unit, type: 'scatter', mode: 'lines', name: 'Pressure (atm)', line: {dash:'dot', color: 'green'}}
   ];
 
-  // Plot 4: Reynolds number
+  // Reynolds number Plot with laminar/turbulent zones
+  const laminar_limit = 2300;
+  const turbulent_limit = 4000;
+  // We'll shade laminar in light blue, turbulent in light orange, transitional in white
+  // Create fill shapes to shade regions along x axis
+
+  // Determine laminar/turbulent zones along x
+  // We'll create vertical rectangles for laminar and turbulent parts based on Re values
+
+  // To simplify, if all Re > laminar_limit, just mark turbulent zone.
+
+  const minRe = Math.min(...Re);
+  const maxRe = Math.max(...Re);
+
+  // We will shade entire region accordingly.
+
+  // Shapes for shading laminar and turbulent zones horizontally
+  let laminarShape = {
+    type: 'rect',
+    xref: 'paper',
+    yref: 'y',
+    x0: 0,
+    x1: 1,
+    y0: 0,
+    y1: laminar_limit,
+    fillcolor: 'rgba(173,216,230,0.3)', // light blue
+    line: {width:0},
+    layer: 'below'
+  };
+  let turbulentShape = {
+    type: 'rect',
+    xref: 'paper',
+    yref: 'y',
+    x0: 0,
+    x1: 1,
+    y0: laminar_limit,
+    y1: maxRe * 1.1,
+    fillcolor: 'rgba(255,165,0,0.15)', // light orange
+    line: {width:0},
+    layer: 'below'
+  };
+
   const fig4 = [
     {x: x, y: Re, type: 'scatter', mode: 'lines', name: 'Reynolds Number', line: {color: 'orange'}}
   ];
 
-  // Plot 5: Mach number
+  // Mach number Plot
   const fig5 = [
     {x: x, y: Mach, type: 'scatter', mode: 'lines', name: 'Mach Number', line: {color: 'black'}}
   ];
 
-  // Clear plots container
+  // Layouts
+  const layoutShape = {
+    title: "Wind Tunnel Shape (Half Height)",
+    xaxis: {title: "Position (m)"},
+    yaxis: {title: "Half Height (m)"},
+    shapes: sectionLines
+  };
+
+  const layoutVelocity = {
+    title: "Velocity",
+    xaxis: {title: "Position (m)"},
+    yaxis: {title: "Velocity (m/s)"},
+    shapes: sectionLines,
+    legend: {orientation: 'h'}
+  };
+
+  const layoutPressure = {
+    title: "Pressure",
+    xaxis: {title: "Position (m)"},
+    yaxis: {title: "Pressure"},
+    shapes: sectionLines,
+    legend: {orientation: 'h'}
+  };
+
+  const layoutRe = {
+    title: "Reynolds Number",
+    xaxis: {title: "Position (m)"},
+    yaxis: {title: "Re"},
+    shapes: [laminarShape, turbulentShape, ...sectionLines],
+    legend: {orientation: 'h'}
+  };
+
+  const layoutMach = {
+    title: "Mach Number",
+    xaxis: {title: "Position (m)"},
+    yaxis: {title: "Mach"},
+    shapes: sectionLines,
+    legend: {orientation: 'h'}
+  };
+
+  // Clear plots div
   const plotsDiv = document.getElementById("plots");
   plotsDiv.innerHTML = "";
 
@@ -304,16 +430,53 @@ function calculateResults() {
     plotsDiv.appendChild(d);
   });
 
-  Plotly.newPlot("shapePlot", [fig1], {title: "Wind Tunnel Shape (Half Height)", xaxis:{title:"Position (m)"}, yaxis:{title:"Half Height (m)"}});
-  Plotly.newPlot("velocityPlot", fig2, {title: "Velocity", xaxis:{title:"Position (m)"}, yaxis:{title:"Velocity"}});
-  Plotly.newPlot("pressurePlot", fig3, {title: "Pressure", xaxis:{title:"Position (m)"}, yaxis:{title:"Pressure"}});
-  Plotly.newPlot("rePlot", fig4, {title: "Reynolds Number", xaxis:{title:"Position (m)"}, yaxis:{title:"Re"}});
-  Plotly.newPlot("machPlot", fig5, {title: "Mach Number", xaxis:{title:"Position (m)"}, yaxis:{title:"Mach"}});
-
-  // Go to step 3 (results)
-  goToStep(3);
+  Plotly.newPlot("shapePlot", [fig1], layoutShape);
+  Plotly.newPlot("velocityPlot", fig2, layoutVelocity);
+  Plotly.newPlot("pressurePlot", fig3, layoutPressure);
+  Plotly.newPlot("rePlot", fig4, layoutRe);
+  Plotly.newPlot("machPlot", fig5, layoutMach);
 }
+
+// CSV download
+function downloadCSV(){
+  const summary = document.getElementById("summary").innerText;
+  // We'll parse the table and create CSV
+  const rows = [];
+  const table = document.querySelector("#summary table");
+  for(let r=0; r<table.rows.length; r++){
+    let row = [];
+    for(let c=0; c<table.rows[r].cells.length; c++){
+      row.push('"' + table.rows[r].cells[c].innerText + '"');
+    }
+    rows.push(row.join(","));
+  }
+  const csvContent = rows.join("\n");
+  const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = "wind_tunnel_summary.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Download plot PNG
+function downloadPlotPNG(divId){
+  Plotly.downloadImage(divId, {format:'png', filename: divId});
+}
+
+// Auto update inputs and calculate on changes
+const inputs = document.querySelectorAll('input, select');
+inputs.forEach(input => {
+  input.addEventListener('input', () => {
+    if(!document.getElementById("step3").classList.contains("hidden")){
+      calculateResults();
+    }
+  });
+});
+
+// Initial show step 1
+goToStep(1);
 </script>
 </body>
 </html>
-
