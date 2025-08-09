@@ -1,164 +1,319 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Wind Tunnel Calculator</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wind Tunnel Calculator - Multi Step</title>
 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 <style>
-  body { font-family: Arial, sans-serif; margin: 20px; background: #f4f4f4; }
-  h1 { text-align: center; }
-  .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
-  input, select { width: 100%; padding: 5px; margin: 5px 0; }
-  button { padding: 10px; background: #007BFF; color: white; border: none; cursor: pointer; width: 100%; }
-  button:hover { background: #0056b3; }
-  table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-  th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-  th { background: #007BFF; color: white; }
+  body {
+    font-family: Arial, sans-serif;
+    background: #f9f9f9;
+    margin: 0; padding: 0;
+  }
+  .container {
+    max-width: 900px;
+    margin: 20px auto;
+    background: white;
+    padding: 20px 30px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+    border-radius: 8px;
+  }
+  h1, h2 {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  label {
+    display: block;
+    margin: 12px 0 5px 0;
+    font-weight: bold;
+  }
+  input[type=number], select {
+    width: 100%;
+    padding: 8px;
+    font-size: 1rem;
+    box-sizing: border-box;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+  }
+  button {
+    margin-top: 20px;
+    padding: 12px 0;
+    width: 100%;
+    background: #007BFF;
+    color: white;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #0056b3;
+  }
+  .hidden {
+    display: none;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+  }
+  th {
+    background: #007BFF;
+    color: white;
+  }
+  #plots > div {
+    margin-top: 30px;
+  }
+  nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 15px;
+  }
+  nav button {
+    width: 48%;
+  }
+  @media (max-width: 600px) {
+    nav {
+      flex-direction: column;
+    }
+    nav button {
+      width: 100%;
+      margin: 5px 0;
+    }
+  }
 </style>
 </head>
 <body>
 <div class="container">
-<h1>Wind Tunnel Calculator</h1>
+  <h1>Wind Tunnel Calculator</h1>
 
-<h3>Inputs</h3>
-<label>Test section side (m): <input type="number" id="a_test" value="0.2" step="0.01"></label>
-<label>Test section length (m): <input type="number" id="L_test" value="0.4" step="0.01"></label>
-<label>Fan diameter (inches): <input type="number" id="D_fan_in" value="14" step="0.1"></label>
-<label>Flow rate (m³/h): <input type="number" id="Q_m3h" value="5100" step="10"></label>
-<label>Air density (kg/m³): <input type="number" id="rho" value="1.2" step="0.01"></label>
-<label>Dynamic viscosity (Pa·s): <input type="number" id="mu" value="0.0000181" step="1e-7"></label>
-<label>Atmospheric pressure (Pa): <input type="number" id="P_atm" value="101325" step="10"></label>
-<label>Speed of sound (m/s): <input type="number" id="a_sound" value="343" step="1"></label>
-<label>Contraction ratio: <input type="number" id="CR" value="8" step="0.1"></label>
-<label>Diffuser half-angle (deg): <input type="number" id="diffuser_angle" value="4.5" step="0.1"></label>
-<label>Include diffuser? <select id="include_diffuser"><option value="true">Yes</option><option value="false">No</option></select></label>
+  <!-- Step 1: Constants -->
+  <section id="step1">
+    <h2>Step 1: Enter Constant Inputs</h2>
+    <label for="a_test">Test Section Side (m)</label>
+    <input type="number" id="a_test" value="0.2" step="0.01" min="0" />
+    
+    <label for="L_test">Test Section Length (m)</label>
+    <input type="number" id="L_test" value="0.4" step="0.01" min="0" />
+    
+    <label for="D_fan_in">Fan Diameter (inches)</label>
+    <input type="number" id="D_fan_in" value="14" step="0.1" min="0" />
+    
+    <label for="Q_m3h">Flow Rate (m³/h)</label>
+    <input type="number" id="Q_m3h" value="5100" step="10" min="0" />
+    
+    <label for="rho">Air Density (kg/m³)</label>
+    <input type="number" id="rho" value="1.2" step="0.01" min="0" />
+    
+    <label for="mu">Dynamic Viscosity (Pa·s)</label>
+    <input type="number" id="mu" value="0.0000181" step="1e-7" min="0" />
+    
+    <label for="P_atm">Atmospheric Pressure (Pa)</label>
+    <input type="number" id="P_atm" value="101325" step="10" min="0" />
+    
+    <label for="a_sound">Speed of Sound (m/s)</label>
+    <input type="number" id="a_sound" value="343" step="1" min="0" />
+    
+    <button onclick="goToStep(2)">Next →</button>
+  </section>
 
-<button onclick="calculate()">Run Calculation</button>
+  <!-- Step 2: Variables -->
+  <section id="step2" class="hidden">
+    <h2>Step 2: Enter Variable Inputs</h2>
+    
+    <label for="CR">Contraction Ratio</label>
+    <input type="number" id="CR" value="8" step="0.1" min="1" />
+    
+    <label for="diffuser_angle">Diffuser Half-Angle (degrees)</label>
+    <input type="number" id="diffuser_angle" value="4.5" step="0.1" min="0" max="30" />
+    
+    <label for="include_diffuser">Include Diffuser?</label>
+    <select id="include_diffuser">
+      <option value="true" selected>Yes</option>
+      <option value="false">No</option>
+    </select>
+    
+    <nav>
+      <button onclick="goToStep(1)">← Back</button>
+      <button onclick="calculateResults()">Calculate →</button>
+    </nav>
+  </section>
 
-<div id="summary"></div>
-<div id="plots" style="margin-top:30px;"></div>
-
+  <!-- Step 3: Results -->
+  <section id="step3" class="hidden">
+    <h2>Step 3: Results Summary</h2>
+    <div id="summary"></div>
+    <div id="plots"></div>
+    <nav>
+      <button onclick="goToStep(2)">← Back</button>
+      <button onclick="goToStep(1)">Start Over</button>
+    </nav>
+  </section>
 </div>
 
 <script>
-function calculate() {
-    // Inputs
-    const a_test = parseFloat(document.getElementById("a_test").value);
-    const L_test = parseFloat(document.getElementById("L_test").value);
-    const D_fan = parseFloat(document.getElementById("D_fan_in").value) * 0.0254;
-    const Q = parseFloat(document.getElementById("Q_m3h").value) / 3600;
-    const rho = parseFloat(document.getElementById("rho").value);
-    const mu = parseFloat(document.getElementById("mu").value);
-    const P_atm = parseFloat(document.getElementById("P_atm").value);
-    const atm_conv = 101325;
-    const a_sound = parseFloat(document.getElementById("a_sound").value);
-    const CR = parseFloat(document.getElementById("CR").value);
-    const diffuser_angle_deg = parseFloat(document.getElementById("diffuser_angle").value);
-    const include_diffuser = document.getElementById("include_diffuser").value === "true";
+// Helper: show only one step section
+function goToStep(step) {
+  for (let i=1; i<=3; i++) {
+    document.getElementById(`step${i}`).classList.add('hidden');
+  }
+  document.getElementById(`step${step}`).classList.remove('hidden');
+  if(step === 3){
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+}
 
-    // Geometry
-    const A_test = a_test ** 2;
-    const A_fan = Math.PI * (D_fan / 2) ** 2;
-    const a_inlet = a_test * Math.sqrt(CR);
-    const A_inlet = a_inlet ** 2;
-    const Dh_inlet = a_inlet;
-    const L_contraction = 0.6 * Dh_inlet;
+// Main calculation ported from your MATLAB code:
+function calculateResults() {
+  // Get inputs
+  const a_test = parseFloat(document.getElementById("a_test").value);
+  const L_test = parseFloat(document.getElementById("L_test").value);
+  const D_fan = parseFloat(document.getElementById("D_fan_in").value) * 0.0254; // inches to meters
+  const Q = parseFloat(document.getElementById("Q_m3h").value) / 3600; // m3/h to m3/s
+  const rho = parseFloat(document.getElementById("rho").value);
+  const mu = parseFloat(document.getElementById("mu").value);
+  const P_atm = parseFloat(document.getElementById("P_atm").value);
+  const atm_conv = 101325;
+  const a_sound = parseFloat(document.getElementById("a_sound").value);
+  const CR = parseFloat(document.getElementById("CR").value);
+  const diffuser_angle_deg = parseFloat(document.getElementById("diffuser_angle").value);
+  const include_diffuser = document.getElementById("include_diffuser").value === "true";
 
-    let L_diffuser = 0;
-    if (include_diffuser) {
-        const diffuser_angle_rad = diffuser_angle_deg * Math.PI / 180;
-        const R_exit = Math.sqrt(A_fan / Math.PI);
-        const R_test = a_test / 2;
-        L_diffuser = (R_exit - R_test) / Math.tan(diffuser_angle_rad);
+  // Geometry calculations
+  const A_test = a_test ** 2;
+  const A_fan = Math.PI * (D_fan / 2) ** 2;
+  const a_inlet = a_test * Math.sqrt(CR);
+  const A_inlet = a_inlet ** 2;
+  const Dh_inlet = a_inlet;
+  const L_contraction = 0.6 * Dh_inlet;
+
+  let L_diffuser = 0;
+  if(include_diffuser){
+    const diffuser_angle_rad = diffuser_angle_deg * Math.PI / 180;
+    const R_exit = Math.sqrt(A_fan / Math.PI);
+    const R_test = a_test / 2;
+    L_diffuser = (R_exit - R_test) / Math.tan(diffuser_angle_rad);
+  }
+
+  const V_inlet = Q / A_inlet;
+  const L_total = L_contraction + L_test + L_diffuser;
+
+  // Discretization
+  const dx = 0.01;
+  const N = Math.floor(L_total / dx) + 1;
+  let x = [], V = [], P = [], P_atm_unit = [], Re = [], Mach = [], half_height = [];
+
+  for(let i=0; i<N; i++){
+    const pos = i*dx;
+    let A = 0, hh = 0;
+
+    if(pos < L_contraction){
+      const side = a_inlet - (a_inlet - a_test)/L_contraction * pos;
+      A = side**2;
+      hh = side/2;
+    }
+    else if(pos < L_contraction + L_test){
+      A = A_test;
+      hh = a_test/2;
+    }
+    else{
+      const x_diff = pos - (L_contraction + L_test);
+      hh = (a_test/2) + ((D_fan/2) - (a_test/2)) * (x_diff / L_diffuser);
+      A = (2*hh)**2;
     }
 
-    const V_inlet = Q / A_inlet;
-    const L_total = L_contraction + L_test + L_diffuser;
+    const vel = Q / A;
+    const pressure = P_atm + 0.5 * rho * (V_inlet**2 - vel**2);
 
-    // Discretization
-    const dx = 0.01;
-    const N = Math.floor(L_total / dx) + 1;
-    let x = [], V = [], P = [], P_atm_unit = [], Re = [], Mach = [], half_height = [];
+    x.push(pos);
+    V.push(vel);
+    P.push(pressure);
+    P_atm_unit.push(pressure / atm_conv);
+    Re.push(rho * vel * (2*hh) / mu);
+    Mach.push(vel / a_sound);
+    half_height.push(hh);
+  }
 
-    for (let i = 0; i < N; i++) {
-        const pos = i * dx;
-        let A = 0, hh = 0;
+  // Summary
+  const exhaust_velocity = V[V.length-1];
+  const exhaust_pressure = P[P.length-1];
 
-        if (pos < L_contraction) {
-            const side = a_inlet - (a_inlet - a_test) / L_contraction * pos;
-            A = side ** 2;
-            hh = side / 2;
-        } else if (pos < L_contraction + L_test) {
-            A = A_test;
-            hh = a_test / 2;
-        } else {
-            const x_diff = pos - (L_contraction + L_test);
-            hh = (a_test / 2) + ((D_fan / 2) - (a_test / 2)) * (x_diff / L_diffuser);
-            A = (2 * hh) ** 2;
-        }
+  let summaryHTML = `
+  <table>
+    <tr><th>Total Length (m)</th><td>${L_total.toFixed(3)}</td></tr>
+    <tr><th>Contraction Length (m)</th><td>${L_contraction.toFixed(3)}</td></tr>
+    <tr><th>Test Section Length (m)</th><td>${L_test.toFixed(3)}</td></tr>
+    <tr><th>Diffuser Length (m)</th><td>${L_diffuser.toFixed(3)}</td></tr>
+    <tr><th>Diffuser Angle (deg)</th><td>${diffuser_angle_deg}</td></tr>
+    <tr><th>Inlet Side (m)</th><td>${a_inlet.toFixed(3)}</td></tr>
+    <tr><th>Test Section Side (m)</th><td>${a_test.toFixed(3)}</td></tr>
+    <tr><th>Fan Diameter (m)</th><td>${D_fan.toFixed(3)}</td></tr>
+    <tr><th>Exhaust Velocity (m/s)</th><td>${exhaust_velocity.toFixed(2)}</td></tr>
+    <tr><th>Exhaust Pressure (Pa)</th><td>${exhaust_pressure.toFixed(2)}</td></tr>
+  </table>`;
 
-        const vel = Q / A;
-        const pressure = P_atm + 0.5 * rho * (V_inlet ** 2 - vel ** 2);
+  document.getElementById("summary").innerHTML = summaryHTML;
 
-        x.push(pos);
-        V.push(vel);
-        P.push(pressure);
-        P_atm_unit.push(pressure / atm_conv);
-        Re.push(rho * vel * (2 * hh) / mu);
-        Mach.push(vel / a_sound);
-        half_height.push(hh);
-    }
+  // Plot 1: Wind Tunnel Shape (Half height)
+  const fig1 = {
+    x: x,
+    y: half_height,
+    type: 'scatter',
+    mode: 'lines',
+    name: 'Half Height (m)',
+    line: {color: 'black'}
+  };
 
-    // Summary table
-    const exhaust_velocity = V[V.length - 1];
-    const exhaust_pressure = P[P.length - 1];
+  // Plot 2: Velocity (m/s and km/h)
+  const fig2 = [
+    {x: x, y: V, type: 'scatter', mode: 'lines', name: 'Velocity (m/s)', line: {color: 'blue'}},
+    {x: x, y: V.map(v => v*3.6), type: 'scatter', mode: 'lines', name: 'Velocity (km/h)', line: {dash:'dot', color: 'blue'}}
+  ];
 
-    document.getElementById("summary").innerHTML = `
-    <h3>Summary</h3>
-    <table>
-      <tr><th>Total Length (m)</th><td>${L_total.toFixed(3)}</td></tr>
-      <tr><th>Contraction Length (m)</th><td>${L_contraction.toFixed(3)}</td></tr>
-      <tr><th>Test Section Length (m)</th><td>${L_test.toFixed(3)}</td></tr>
-      <tr><th>Diffuser Length (m)</th><td>${L_diffuser.toFixed(3)}</td></tr>
-      <tr><th>Diffuser Angle (deg)</th><td>${diffuser_angle_deg}</td></tr>
-      <tr><th>Inlet Side (m)</th><td>${a_inlet.toFixed(3)}</td></tr>
-      <tr><th>Test Section Side (m)</th><td>${a_test.toFixed(3)}</td></tr>
-      <tr><th>Fan Diameter (m)</th><td>${D_fan.toFixed(3)}</td></tr>
-      <tr><th>Exhaust Velocity (m/s)</th><td>${exhaust_velocity.toFixed(2)}</td></tr>
-      <tr><th>Exhaust Pressure (Pa)</th><td>${exhaust_pressure.toFixed(2)}</td></tr>
-    </table>
-    `;
+  // Plot 3: Pressure (Pa and atm)
+  const fig3 = [
+    {x: x, y: P, type: 'scatter', mode: 'lines', name: 'Pressure (Pa)', line: {color: 'green'}},
+    {x: x, y: P_atm_unit, type: 'scatter', mode: 'lines', name: 'Pressure (atm)', line: {dash:'dot', color: 'green'}}
+  ];
 
-    // Plots
-    const fig1 = {
-        x: x, y: half_height, type: 'scatter', mode: 'lines', name: 'Half Height (m)', line: {color: 'black'}
-    };
+  // Plot 4: Reynolds number
+  const fig4 = [
+    {x: x, y: Re, type: 'scatter', mode: 'lines', name: 'Reynolds Number', line: {color: 'orange'}}
+  ];
 
-    const fig2 = [
-        {x: x, y: V, type: 'scatter', mode: 'lines', name: 'Velocity (m/s)', line: {color: 'blue'}},
-        {x: x, y: V.map(v => v*3.6), type: 'scatter', mode: 'lines', name: 'Velocity (km/h)', line: {dash: 'dot', color: 'blue'}}
-    ];
+  // Plot 5: Mach number
+  const fig5 = [
+    {x: x, y: Mach, type: 'scatter', mode: 'lines', name: 'Mach Number', line: {color: 'black'}}
+  ];
 
-    const fig3 = [
-        {x: x, y: P, type: 'scatter', mode: 'lines', name: 'Pressure (Pa)', line: {color: 'green'}},
-        {x: x, y: P_atm_unit, type: 'scatter', mode: 'lines', name: 'Pressure (atm)', line: {dash: 'dot', color: 'green'}}
-    ];
+  // Clear plots container
+  const plotsDiv = document.getElementById("plots");
+  plotsDiv.innerHTML = "";
 
-    const fig4 = [
-        {x: x, y: Re, type: 'scatter', mode: 'lines', name: 'Reynolds', line: {color: 'orange'}}
-    ];
+  // Create divs for plots
+  ["shapePlot", "velocityPlot", "pressurePlot", "rePlot", "machPlot"].forEach(id => {
+    const d = document.createElement("div");
+    d.id = id;
+    d.style.minHeight = "350px";
+    plotsDiv.appendChild(d);
+  });
 
-    const fig5 = [
-        {x: x, y: Mach, type: 'scatter', mode: 'lines', name: 'Mach', line: {color: 'black'}}
-    ];
+  Plotly.newPlot("shapePlot", [fig1], {title: "Wind Tunnel Shape (Half Height)", xaxis:{title:"Position (m)"}, yaxis:{title:"Half Height (m)"}});
+  Plotly.newPlot("velocityPlot", fig2, {title: "Velocity", xaxis:{title:"Position (m)"}, yaxis:{title:"Velocity"}});
+  Plotly.newPlot("pressurePlot", fig3, {title: "Pressure", xaxis:{title:"Position (m)"}, yaxis:{title:"Pressure"}});
+  Plotly.newPlot("rePlot", fig4, {title: "Reynolds Number", xaxis:{title:"Position (m)"}, yaxis:{title:"Re"}});
+  Plotly.newPlot("machPlot", fig5, {title: "Mach Number", xaxis:{title:"Position (m)"}, yaxis:{title:"Mach"}});
 
-    document.getElementById("plots").innerHTML = '';
-    Plotly.newPlot("plots", [fig1], {title: "Tunnel Shape", xaxis: {title: "Position (m)"}, yaxis: {title: "Half Height (m)"}});
-    Plotly.newPlot("plots", fig2, {title: "Velocity", xaxis: {title: "Position (m)"}, yaxis: {title: "Velocity"}});
-    Plotly.newPlot("plots", fig3, {title: "Pressure", xaxis: {title: "Position (m)"}, yaxis: {title: "Pressure"}});
-    Plotly.newPlot("plots", fig4, {title: "Reynolds Number", xaxis: {title: "Position (m)"}, yaxis: {title: "Re"}});
-    Plotly.newPlot("plots", fig5, {title: "Mach Number", xaxis: {title: "Position (m)"}, yaxis: {title: "Mach"}});
+  // Go to step 3 (results)
+  goToStep(3);
 }
 </script>
 </body>
 </html>
+
