@@ -320,24 +320,28 @@
             // Section boundaries
             const x_key = [0, L_contraction, L_contraction + inputs.L_test, L_total];
 
-            // Summary data
-            const summary = {
-                'Contraction Length (m) (coefficient = CF_l)': `${L_contraction.toFixed(2)} (CF_l = ${inputs.CF_l.toFixed(2)})`,
-                'Test Section Length (m)': inputs.L_test.toFixed(2),
-                'Diffuser Length (m)': inputs.include_diffuser ? L_diffuser.toFixed(2) : 'Not included',
-                'Diffuser Half-Angle (deg)': inputs.include_diffuser ? inputs.diffuser_angle_deg.toFixed(2) : 'N/A',
-                'Total Length (m)': L_total.toFixed(2),
-                'Inlet Side Length (m)': a_inlet.toFixed(3),
-                'Inlet Area (m²)': A_inlet.toFixed(4),
-                'Test Section Side (m)': inputs.a_test.toFixed(3),
-                'Test Area (m²)': A_test.toFixed(4),
-                'Fan Diameter (m)': D_fan.toFixed(3),
-                'Fan Area (m²)': A_fan.toFixed(4),
-                'Exhaust Velocity (m/s)': V[N-1].toFixed(2),
-                'Exhaust Velocity (km/h)': (V[N-1] * 3.6).toFixed(2),
-                'Exhaust Pressure (Pa)': P[N-1].toFixed(2),
-                'Exhaust Pressure (atm)': P_atm_unit[N-1].toFixed(5)
-            };
+            // Test section velocity (constant in test section)
+            const V_test = Q / A_test;
+
+            // Summary data in specified order
+            const summary = {};
+            summary['Total Length (m)'] = L_total.toFixed(2);
+            summary['Contraction Length (m) (coefficient = CF_l)'] = `${L_contraction.toFixed(2)} (CF_l = ${inputs.CF_l.toFixed(2)})`;
+            summary['Test Section Length (m)'] = inputs.L_test.toFixed(2);
+            summary['Diffuser Length (m)'] = inputs.include_diffuser ? L_diffuser.toFixed(2) : 'Not included';
+            summary['Diffuser Half-Angle (deg)'] = inputs.include_diffuser ? inputs.diffuser_angle_deg.toFixed(2) : 'N/A';
+            summary['Inlet Side Length (m)'] = a_inlet.toFixed(3);
+            summary['Inlet Area (m²)'] = A_inlet.toFixed(4);
+            summary['Test Section Side (m)'] = inputs.a_test.toFixed(3);
+            summary['Test Area (m²)'] = A_test.toFixed(4);
+            summary['Test Section Velocity (m/s)'] = V_test.toFixed(2);
+            summary['Test Section Velocity (km/h)'] = (V_test * 3.6).toFixed(2);
+            summary['Fan Diameter (m)'] = D_fan.toFixed(3);
+            summary['Fan Area (m²)'] = A_fan.toFixed(4);
+            summary['Exhaust Velocity (m/s)'] = V[N-1].toFixed(2);
+            summary['Exhaust Velocity (km/h)'] = (V[N-1] * 3.6).toFixed(2);
+            summary['Exhaust Pressure (Pa)'] = P[N-1].toFixed(2);
+            summary['Exhaust Pressure (atm)'] = P_atm_unit[N-1].toFixed(5);
 
             return { x, half_height, V, P, P_atm_unit, Re, Mach, x_key, summary, L_contraction, inputs, L_diffuser, L_total };
         }
@@ -454,7 +458,7 @@
                 xaxis: { title: 'Position (m)' },
                 yaxis: { title: 'Half Height (m)', scaleanchor: 'x', scaleratio: 1 },
                 showlegend: false,
-                margin: { t: 30, b: 40, l: 40, r: 20 }
+                margin: { t: 30, b: 60, l: 40, r: 20 }
             };
 
             addSectionMarks(layout, data);
@@ -474,7 +478,7 @@
                 xaxis: { title: 'Position (m)' },
                 yaxis: { title: 'Velocity (m/s)' },
                 yaxis2: { title: 'Velocity (km/h)', side: 'right', overlaying: 'y' },
-                margin: { t: 30, b: 40, l: 40, r: 40 }
+                margin: { t: 30, b: 60, l: 40, r: 40 }
             };
 
             addSectionMarks(layout, data);
@@ -503,7 +507,7 @@
                 xaxis: { title: 'Position (m)' },
                 yaxis: { title: 'Pressure (Pa)' },
                 yaxis2: { title: 'Pressure (atm)', side: 'right', overlaying: 'y' },
-                margin: { t: 30, b: 40, l: 40, r: 40 }
+                margin: { t: 30, b: 60, l: 40, r: 40 }
             };
 
             addSectionMarks(layout, data);
@@ -536,7 +540,7 @@
                 title: 'Reynolds Number along the Wind Tunnel',
                 xaxis: { title: 'Position (m)' },
                 yaxis: { title: 'Re' },
-                margin: { t: 30, b: 40, l: 40, r: 20 },
+                margin: { t: 30, b: 60, l: 40, r: 20 },
                 shapes: [{ type: 'line', x0: data.x[0], x1: data.x[data.x.length-1], y0: 2300, y1: 2300, line: {color: 'blue', dash: 'dash'} }]
             };
 
@@ -555,7 +559,7 @@
                 title: 'Mach Number along the Wind Tunnel',
                 xaxis: { title: 'Position (m)' },
                 yaxis: { title: 'Mach Number' },
-                margin: { t: 30, b: 40, l: 40, r: 20 },
+                margin: { t: 30, b: 60, l: 40, r: 20 },
                 shapes: [
                     { type: 'line', x0: data.x[0], x1: data.x[data.x.length-1], y0: 0.3, y1: 0.3, line: {color: 'green', dash: 'dash'} },
                     { type: 'line', x0: data.x[0], x1: data.x[data.x.length-1], y0: 1.0, y1: 1.0, line: {color: 'red', dash: 'dash'} }
